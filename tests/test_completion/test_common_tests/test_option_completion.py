@@ -32,3 +32,28 @@ def test_boolean_option():
 
     completions = list(c.get_completions(Document("bool-option --foo t")))
     assert {x.text for x in completions} == {"true"}
+
+
+def test_shortest_only_mode():
+    @root_command.command()
+    @click.option("--foo", "-f", is_flag=True)
+    @click.option("-b", "--bar", is_flag=True)
+    @click.option("--foobar", is_flag=True)
+    def shortest_only(foo, bar, foobar):
+        pass
+
+    c.shortest_only = True
+
+    completions = list(c.get_completions(Document("shortest-only ")))
+    assert {x.text for x in completions} == {"-f", "-b", "--foobar"}
+
+    completions = list(c.get_completions(Document("shortest-only -")))
+    assert {x.text for x in completions} == {"-f", "--foo", "-b", "--bar", "--foobar"}
+
+    completions = list(c.get_completions(Document("shortest-only --f")))
+    assert {x.text for x in completions} == {"--foo", "--foobar"}
+
+    c.shortest_only = False
+
+    completions = list(c.get_completions(Document("shortest-only ")))
+    assert {x.text for x in completions} == {"-f", "--foo", "-b", "--bar", "--foobar"}

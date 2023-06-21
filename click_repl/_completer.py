@@ -33,12 +33,13 @@ def text_type(text):
 class ClickCompleter(Completer):
     __slots__ = ("cli", "ctx", "parsed_args", "parsed_ctx", "ctx_command")
 
-    def __init__(self, cli, ctx):
+    def __init__(self, cli, ctx, shortest_only=False):
         self.cli = cli
         self.ctx = ctx
         self.parsed_args = []
         self.parsed_ctx = ctx
         self.ctx_command = ctx.command
+        self.shortest_only = shortest_only
 
     def _get_completion_from_autocompletion_functions(
         self,
@@ -199,7 +200,15 @@ class ClickCompleter(Completer):
                 continue
 
             elif isinstance(param, click.Option):
-                for option in param.opts + param.secondary_opts:
+                opts = param.opts + param.secondary_opts
+
+                if (self.shortest_only
+                        and not incomplete        # just typed a space
+                        and args[-1] not in opts  # not selecting a value for a longer version of this option
+                ):
+                    opts = [min(opts, key=len)]
+
+                for option in opts:
                     # We want to make sure if this parameter was called
                     # If we are inside a parameter that was called, we want to show only
                     # relevant choices
