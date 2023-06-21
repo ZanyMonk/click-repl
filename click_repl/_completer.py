@@ -201,6 +201,12 @@ class ClickCompleter(Completer):
 
             elif isinstance(param, click.Option):
                 opts = param.opts + param.secondary_opts
+                previous_args = args[: param.nargs * -1]
+                current_args = args[param.nargs * -1 :]
+
+                already_present = any([
+                    opt in previous_args for opt in opts
+                ])
 
                 if (self.shortest_only
                         and not incomplete        # just typed a space
@@ -212,11 +218,11 @@ class ClickCompleter(Completer):
                     # We want to make sure if this parameter was called
                     # If we are inside a parameter that was called, we want to show only
                     # relevant choices
-                    if option in args[param.nargs * -1 :]:  # noqa: E203
+                    if option in current_args:  # noqa: E203
                         param_called = True
                         break
 
-                    elif option.startswith(incomplete):
+                    elif option.startswith(incomplete) and not (already_present and not param.multiple):
                         choices.append(
                             Completion(
                                 text_type(option),

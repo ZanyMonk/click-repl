@@ -34,6 +34,32 @@ def test_boolean_option():
     assert {x.text for x in completions} == {"true"}
 
 
+def test_unique_option():
+    @root_command.command()
+    @click.option("-u", type=click.BOOL)
+    def bool_option(foo):
+        pass
+
+    completions = list(c.get_completions(Document("bool-option ")))
+    assert {x.text for x in completions} == {"-u"}
+
+    completions = list(c.get_completions(Document("bool-option -u t ")))
+    assert len(completions) == 0
+
+
+def test_multiple_option():
+    @root_command.command()
+    @click.option("-u", type=click.BOOL, multiple=True)
+    def bool_option(foo):
+        pass
+
+    completions = list(c.get_completions(Document("bool-option ")))
+    assert {x.text for x in completions} == {"-u"}
+
+    completions = list(c.get_completions(Document("bool-option -u t ")))
+    assert {x.text for x in completions} == {"-u"}
+
+
 def test_shortest_only_mode():
     @root_command.command()
     @click.option("--foo", "-f", is_flag=True)
